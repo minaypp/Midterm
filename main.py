@@ -2,7 +2,6 @@
 citations: chatgpt, in class lessons
 """
 
-
 from datetime import datetime, date
 
 class Transaction:
@@ -22,41 +21,30 @@ class Transaction:
                 self.category == other.category and
                 self.description == other.description)
 
-"""
 class CashTransaction(Transaction):
-    def __init__(self, date, amount, description, category):
-        super().__init__(date, amount, description)
-        self.category = category
+    def __init__(self, date, amount, category, description):
+        super().__init__(date, amount, category, description)
+        self.method = 'Cash'
 
     def __str__(self):
-        return (super().__str__() + f", Category: {self.category}, Method: Cash")
-
-    def process_transaction(self):
-        pass
+        return super().__str__() + f", Method: {self.method}"
 
     def __eq__(self, other):
-        return (isinstance(other, CashTransaction) and
-                super().__eq__(other) and
-                self.category == other.category)
+        return isinstance(other, CashTransaction) and super().__eq__(other)
 
 class ETransaction(Transaction):
-    def __init__(self, date, amount, description, category, vendor):
-        super().__init__(date, amount, description)
-        self.category = category
+    def __init__(self, date, amount, category, description, vendor):
+        super().__init__(date, amount, category, description)
         self.vendor = vendor
+        self.method = 'Electronic'
 
     def __str__(self):
-        return (super().__str__() + f", Category: {self.category}, Vendor: {self.vendor}")
-
-    def process_transaction(self):
-        pass
+        return super().__str__() + f", Vendor: {self.vendor}, Method: {self.method}"
 
     def __eq__(self, other):
         return (isinstance(other, ETransaction) and
                 super().__eq__(other) and
-                self.category == other.category and
                 self.vendor == other.vendor)
-"""
 
 class Stack:
     def __init__(self):
@@ -555,56 +543,101 @@ def main():
 
         choice = input("Enter your choice: ").strip()
         if choice == '1':
-            transaction_date = prompt_for_date("Enter date (YYYY-MM-DD): ")
-            amount = prompt_for_positive_amount("Enter amount: ")
-            category = prompt_for_category("Enter category: ", ExpenseTracker.VALID_CATEGORIES)
-            description = prompt_for_description("Enter description: ")
-            transaction = Transaction(transaction_date, amount, category, description)
-            tracker.add_transaction(transaction)
+            print("Select transaction type:")
+            print("1. Cash Transaction")
+            print("2. Electronic Transaction")
+            transaction_type_choice = input("Enter your choice: ").strip()
+            if transaction_type_choice == '1':
+                transaction_date = prompt_for_date("Enter date (YYYY-MM-DD): ")
+                amount = prompt_for_positive_amount("Enter amount: ")
+                category = prompt_for_category("Enter category: ", ExpenseTracker.VALID_CATEGORIES)
+                description = prompt_for_description("Enter description: ")
+                transaction = CashTransaction(transaction_date, amount, category, description)
+                tracker.add_transaction(transaction)
+            elif transaction_type_choice == '2':
+                transaction_date = prompt_for_date("Enter date (YYYY-MM-DD): ")
+                amount = prompt_for_positive_amount("Enter amount: ")
+                category = prompt_for_category("Enter category: ", ExpenseTracker.VALID_CATEGORIES)
+                description = prompt_for_description("Enter description: ")
+                vendor = prompt_for_description("Enter vendor: ")
+                transaction = ETransaction(transaction_date, amount, category, description, vendor)
+                tracker.add_transaction(transaction)
+            else:
+                print("Invalid transaction type choice.")
 
         elif choice == '2':
             if not tracker.transactions.head:
                 print("No transactions to delete.")
                 continue
-            transaction_date = prompt_for_date("Enter date of transaction to delete (YYYY-MM-DD): ")
-            amount = prompt_for_positive_amount("Enter amount of transaction to delete: ")
-            category = prompt_for_category("Enter category of transaction to delete: ", ExpenseTracker.VALID_CATEGORIES)
-            description = prompt_for_description("Enter description of transaction to delete: ")
-            transaction_to_delete = Transaction(transaction_date, amount, category, description)
-            tracker.delete_transaction(transaction_to_delete)
+            # Display transactions with indices
+            print("Transactions:")
+            curr = tracker.transactions.head
+            index = 1
+            transactions_list = []
+            while curr:
+                print(f"{index}. {curr.transaction}")
+                transactions_list.append(curr.transaction)
+                curr = curr.next
+                index += 1
+            # Ask user to select a transaction to delete
+            transaction_index = input("Enter the number of the transaction to delete: ").strip()
+            try:
+                transaction_index = int(transaction_index)
+                if 1 <= transaction_index <= len(transactions_list):
+                    transaction_to_delete = transactions_list[transaction_index - 1]
+                    tracker.delete_transaction(transaction_to_delete)
+                else:
+                    print("Invalid transaction number.")
+            except ValueError:
+                print("Invalid input.")
 
         elif choice == '3':
             if not tracker.transactions.head:
                 print("No transactions to edit.")
                 continue
-            while True:
-                print("Enter details of the transaction to edit:")
-                old_transaction_date = prompt_for_date("Enter date (YYYY-MM-DD): ")
-                old_amount = prompt_for_positive_amount("Enter amount: ")
-                old_category = prompt_for_category("Enter category: ", ExpenseTracker.VALID_CATEGORIES)
-                old_description = prompt_for_description("Enter description: ")
-                old_transaction = Transaction(old_transaction_date, old_amount, old_category, old_description)
-
-                # Check if the transaction exists
-                found_transaction = tracker.transactions.find(old_transaction)
-                if found_transaction:
-                    # Proceed to get new details
+            # Display transactions with indices
+            print("Transactions:")
+            curr = tracker.transactions.head
+            index = 1
+            transactions_list = []
+            while curr:
+                print(f"{index}. {curr.transaction}")
+                transactions_list.append(curr.transaction)
+                curr = curr.next
+                index += 1
+            # Ask user to select a transaction to edit
+            transaction_index = input("Enter the number of the transaction to edit: ").strip()
+            try:
+                transaction_index = int(transaction_index)
+                if 1 <= transaction_index <= len(transactions_list):
+                    old_transaction = transactions_list[transaction_index - 1]
+                    # Now prompt for new transaction details
                     print("Enter new details for the transaction:")
-                    new_transaction_date = prompt_for_date("Enter new date (YYYY-MM-DD): ")
-                    new_amount = prompt_for_positive_amount("Enter new amount: ")
-                    new_category = prompt_for_category("Enter new category: ", ExpenseTracker.VALID_CATEGORIES)
-                    new_description = prompt_for_description("Enter new description: ")
-                    new_transaction = Transaction(new_transaction_date, new_amount, new_category, new_description)
+                    if isinstance(old_transaction, CashTransaction):
+                        transaction_date = prompt_for_date("Enter new date (YYYY-MM-DD): ")
+                        amount = prompt_for_positive_amount("Enter new amount: ")
+                        category = prompt_for_category("Enter new category: ", ExpenseTracker.VALID_CATEGORIES)
+                        description = prompt_for_description("Enter new description: ")
+                        new_transaction = CashTransaction(transaction_date, amount, category, description)
+                    elif isinstance(old_transaction, ETransaction):
+                        transaction_date = prompt_for_date("Enter new date (YYYY-MM-DD): ")
+                        amount = prompt_for_positive_amount("Enter new amount: ")
+                        category = prompt_for_category("Enter new category: ", ExpenseTracker.VALID_CATEGORIES)
+                        description = prompt_for_description("Enter new description: ")
+                        vendor = prompt_for_description("Enter new vendor: ")
+                        new_transaction = ETransaction(transaction_date, amount, category, description, vendor)
+                    else:
+                        # For base Transaction or other types
+                        transaction_date = prompt_for_date("Enter new date (YYYY-MM-DD): ")
+                        amount = prompt_for_positive_amount("Enter new amount: ")
+                        category = prompt_for_category("Enter new category: ", ExpenseTracker.VALID_CATEGORIES)
+                        description = prompt_for_description("Enter new description: ")
+                        new_transaction = Transaction(transaction_date, amount, category, description)
                     tracker.edit_transaction(old_transaction, new_transaction)
-                    break
                 else:
-                    print("Transaction not found with the provided details.")
-                    retry = input("Would you like to try again? (y/n): ").strip().lower()
-                    while retry not in ['y', 'n']:
-                        print("Invalid input. Please enter 'y' or 'n'.")
-                        retry = input("Would you like to try again? (y/n): ").strip().lower()
-                    if retry != 'y':
-                        break
+                    print("Invalid transaction number.")
+            except ValueError:
+                print("Invalid input.")
 
         elif choice == '4':
             tracker.view_transactions()
@@ -672,4 +705,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
