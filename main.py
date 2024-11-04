@@ -4,6 +4,7 @@ citations: chatgpt, in class lessons
 
 from datetime import datetime, date
 
+# transaction class
 class Transaction:
     def __init__(self, date, amount, category, description):
         self.date = date  # datetime object
@@ -20,7 +21,7 @@ class Transaction:
                 self.amount == other.amount and
                 self.category == other.category and
                 self.description == other.description)
-
+# inherits from Transaction
 class CashTransaction(Transaction):
     def __init__(self, date, amount, category, description):
         super().__init__(date, amount, category, description)
@@ -31,10 +32,11 @@ class CashTransaction(Transaction):
 
     def __eq__(self, other):
         return isinstance(other, CashTransaction) and super().__eq__(other)
-
+# Inherits from Transaction
 class ETransaction(Transaction):
     def __init__(self, date, amount, category, description, vendor):
         super().__init__(date, amount, category, description)
+        #method overriding
         self.vendor = vendor
         self.method = 'Electronic'
 
